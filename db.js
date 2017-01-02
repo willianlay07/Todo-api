@@ -15,7 +15,7 @@ if(env === 'production'){		// only running on heroku;
 
 var db 			= {};
 
-db.todo 		= sequelize.import(__dirname + '/models/todo.js');	// Load Model;
+db.todo 		= sequelize.import(__dirname + '/models/todo.js');	// Load Model; Model Method;
 db.sequelize 	= sequelize;			// Instance;
 db.Sequelize 	= Sequelize;			// Library;
 
