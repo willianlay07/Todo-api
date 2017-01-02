@@ -30,6 +30,12 @@ sequelize.sync({force: false}).then(function () {
 		}
 	});
 
+	Todo.findAll().then(function(tk){
+		tk.forEach(function(ttkk){
+			console.log(ttkk.toJSON());
+		})
+	});
+
 
 	// Todo.create({
 	// 	description: 'Walking my dog',
