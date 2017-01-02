@@ -1,7 +1,7 @@
 var express 		= require('express');
 var bodyParser 		= require('body-parser');
 var _ 				= require('underscore');
-var db 				= require('./db.js');
+//var db 				= require('./db.js');
 
 var app 			= express();
 var PORT 			= process.env.PORT || 3000;
@@ -16,47 +16,45 @@ app.get('/', function(req, res) {
 
 // Get /todos or /todos?completed=true or /todos?completed=true&q=house
 app.get('/todos', function(req, res) {
-	var query 		= req.query;
-	var where 		= {};
+	var queryParams	 	= req.query;
+	var filteredTodos 	= todos;
 
-	if (query.hasOwnProperty('completed') && query.completed === 'true'){
-		where.completed 	= true;
-	} else if (query.hasOwnProperty('completed') && query.completed === 'false'){
-		where.completed 	= false;
+	if (queryParams.hasOwnProperty('completed') && queryParams.completed === 'true') {
+		filteredTodos = _.where(filteredTodos, {
+			completed: true
+		});
+	} else if (queryParams.hasOwnProperty('completed') && queryParams.completed === 'false') {
+		filteredTodos = _.where(filteredTodos, {
+			completed: false
+		});
 	}
 
-	if(query.hasOwnProperty('q') && query.q.length > 0){
-		where.description 	= {
-			$like: '%'+query.q+'%'
-		};
+
+	if (queryParams.hasOwnProperty('q') && queryParams.q.length > 0) {
+		filteredTodos = _.filter(filteredTodos, function(todo) {
+			return todo.description.toLowerCase().indexOf(queryParams.q.toLowerCase()) > -1;
+		});
 	}
 
-	//console.log(where);
-
-	db.todo.findAll({where: where}).then(function(todos){
-		res.json(todos);
-	}, function(e){
-		res.status(500).send();
-	});
-
+	res.json(filteredTodos);
+	//res.json(todos);
 });
 
 // Get /todos/:id
 app.get('/todos/:id', function(req, res) {
 	var todoId = parseInt(req.params.id, 10);
 	
-	db.todo.findById(todoId).then(function(ttdd){
-
-		if(!!ttdd){						// Because of object we need to change object to boolean;
-			res.json(ttdd.toJSON());
-		} else {
-			res.status(404).send();		// Not found;
-		}
-
-	}, function(e){
-		res.status(500).send();		// Server Error;
+	var matchedTodo = _.findWhere(todos, {
+		id: todoId
 	});
 
+	if (matchedTodo) {
+		res.json(matchedTodo);
+	} else {
+		res.status(404).send();
+	}
+
+	//res.send('Asking for todo with id of ' + req.params.id);
 });
 
 
@@ -64,12 +62,21 @@ app.get('/todos/:id', function(req, res) {
 app.post('/todos', function(req, res) {
 	var body = _.pick(req.body, 'description', 'completed');
 
-	db.todo.create(body).then(function(todo){
-		res.json(todo.toJSON());
-	}, function (e){
-		res.status(400).json(e);
-	});
+	if (!_.isBoolean(body.completed) || !_.isString(body.description) || body.description.trim().length === 0) {
+		return res.status(400).send();
+	}
 
+	body.description = body.description.trim();
+
+	body.id = todoNextId;
+	todoNextId++;
+
+	// Push body into a array;
+	todos.push(body);
+
+	console.log('description : ' + body.description);
+
+	res.json(body);
 });
 
 
@@ -125,8 +132,8 @@ app.put('/todos/:id', function(req, res) {
 });
 
 
-db.sequelize.sync().then(function(){
+//db.sequelize.sync().then(function(){
 	app.listen(PORT, function() {
 		console.log('Express listning on port ' + PORT + '!');
 	});	
-});
+//});
