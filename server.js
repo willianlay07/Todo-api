@@ -3,13 +3,12 @@ var bodyParser 		= require('body-parser');
 var _ 				= require('underscore');
 var db 				= require('./db.js');
 
-var app = express();
-var PORT = process.env.PORT || 3000;
-var todos = [];
-var todoNextId = 1;
+var app 			= express();
+var PORT 			= process.env.PORT || 3000;
+var todos 			= [];
+var todoNextId 		= 1;
 
 app.use(bodyParser.json()); // Middleware;
-
 
 app.get('/', function(req, res) {
 	res.send('Hello - Todo API Root');
@@ -45,15 +44,29 @@ app.get('/todos', function(req, res) {
 // Get /todos/:id
 app.get('/todos/:id', function(req, res) {
 	var todoId = parseInt(req.params.id, 10);
-	var matchedTodo = _.findWhere(todos, {
-		id: todoId
+	
+	db.todo.findById(todoId).then(function(ttdd){
+
+		if(!!ttdd){
+			res.json(ttdd.toJSON());
+		} else {
+			res.status(404).send();		// Not found;
+		}
+
+	}, function(e){
+		res.status(500).send();		// Server Error;
 	});
 
-	if (matchedTodo) {
-		res.json(matchedTodo);
-	} else {
-		res.status(404).send();
-	}
+	// Normal insert to Array without DB;
+	// var matchedTodo = _.findWhere(todos, {
+	// 	id: todoId
+	// });
+
+	// if (matchedTodo) {
+	// 	res.json(matchedTodo);
+	// } else {
+	// 	res.status(404).send();
+	// }
 
 	//res.send('Asking for todo with id of ' + req.params.id);
 });
