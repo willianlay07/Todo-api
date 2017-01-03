@@ -121,14 +121,18 @@ app.put('/todos/:id', function(req, res) {
 	}, function () {			// if wasn't found id;
 		res.status(500).send();
 	});
-
-
-
-	//_.extend(matchedTodo, attribute);
-	//res.json(matchedTodo); // res.json is automatically sent back 200
-
 });
 
+// Post User;
+app.post('/users', function(req, res){
+	var body = _.pick(req.body, 'email', 'password');
+
+	db.user.create(body).then(function(user){
+		res.json(user.toJSON());
+	}, function (e){
+		res.status(400).json(e);
+	});
+});
 
 db.sequelize.sync().then(function(){
 	app.listen(PORT, function() {
