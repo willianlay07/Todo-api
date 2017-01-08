@@ -2,6 +2,7 @@ var express 		= require('express');
 var bodyParser 		= require('body-parser');
 var _ 				= require('underscore');
 var db 				= require('./db.js');
+var bcrypt 			= require('bcrypt');
 
 var app 			= express();
 var PORT 			= process.env.PORT || 3000;
@@ -108,9 +109,9 @@ app.put('/todos/:id', function(req, res) {
 		attribute.description = body.description;
 	}
 
-	db.todo.findById(todoId).then(function(todo){
+	db.todo.findById(todoId).then(function(todo){			// Model Methods;
 		if(todo){
-			todo.update(attribute).then(function(todo){		// if todo go well;
+			todo.update(attribute).then(function(todo){		// if todo go well;		Instance Method;
 				res.json(todo.toJSON());
 			}, function(e){				// if todo go wrong;
 				res.status(400).json(e);		// Invalid Syntax;
@@ -134,7 +135,19 @@ app.post('/users', function(req, res){
 	});
 });
 
-db.sequelize.sync().then(function(){
+// POST /users/login;
+app.post('/users/login', function(req, res){
+	var body = _.pick(req.body, 'email', 'password');
+
+	db.user.authenticate(body).then(function (user){
+		res.json(user.toPublicJSON());
+	}, function (){
+		res.status(401).send();
+	});
+
+});
+
+db.sequelize.sync({force: true}).then(function(){
 	app.listen(PORT, function() {
 		console.log('Express listning on port ' + PORT + '!');
 	});	
