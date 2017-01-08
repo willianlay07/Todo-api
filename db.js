@@ -17,6 +17,7 @@ var db 			= {};
 
 db.todo 		= sequelize.import(__dirname + '/models/todo.js');	// Load Model; Model Method;
 db.user 		= sequelize.import(__dirname + '/models/user.js');	// Load Model; Model Method;
+db.token		= sequelize.import(__dirname + '/models/token.js');
 db.sequelize 	= sequelize;			// Instance;
 db.Sequelize 	= Sequelize;			// Library;
 
