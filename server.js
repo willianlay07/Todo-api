@@ -20,7 +20,9 @@ app.get('/', function(req, res) {
 // Get /todos or /todos?completed=true or /todos?completed=true&q=house
 app.get('/todos', middleware.requireAuthentication, function(req, res) {
 	var query 		= req.query;
-	var where 		= {};
+	var where 		= {
+		userId : req.user.get('id')
+	};
 
 	if (query.hasOwnProperty('completed') && query.completed === 'true'){
 		where.completed 	= true;
@@ -48,7 +50,12 @@ app.get('/todos', middleware.requireAuthentication, function(req, res) {
 app.get('/todos/:id', middleware.requireAuthentication, function(req, res) {
 	var todoId = parseInt(req.params.id, 10);
 	
-	db.todo.findById(todoId).then(function(ttdd){
+	db.todo.findOne({
+		where: {
+			id: todoId,
+			userId: req.user.get('id')
+		}
+	}).then(function(ttdd){
 
 		if(!!ttdd){						// Because of object we need to change object to boolean;
 			res.json(ttdd.toJSON());
@@ -74,7 +81,7 @@ app.post('/todos', middleware.requireAuthentication, function(req, res) {
 		}).then(function(){
 			res.json(todo.toJSON());	
 		});
-		
+
 	}, function (e){
 		res.status(400).json(e);
 	});
@@ -87,7 +94,8 @@ app.delete('/todos/:id', middleware.requireAuthentication, function(req, res) {
 		
 	db.todo.destroy({
 		where: {
-			id: todoId
+			id: todoId,
+			userId: req.user.get('id')
 		}
 	}).then(function(rowsDelected){
 		if(rowsDelected === 0){
@@ -117,7 +125,12 @@ app.put('/todos/:id', middleware.requireAuthentication, function(req, res) {
 		attribute.description = body.description;
 	}
 
-	db.todo.findById(todoId).then(function(todo){			// Model Methods;
+	db.todo.findOne({
+		where: {
+			id: todoId,
+			userId: req.user.get('id')
+		}
+	}).then(function(todo){			// Model Methods;
 		if(todo){
 			todo.update(attribute).then(function(todo){		// if todo go well;		Instance Method;
 				res.json(todo.toJSON());
@@ -163,7 +176,7 @@ app.post('/users/login', function(req, res){
 
 });
 
-db.sequelize.sync({force: false}).then(function(){
+db.sequelize.sync({force: true}).then(function(){
 	app.listen(PORT, function() {
 		console.log('Express listning on port ' + PORT + '!');
 	});	
